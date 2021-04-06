@@ -78,7 +78,7 @@ procedure Node1100;                                      // rejoin party
       and:
          #define Character_Name_In_Party                        (Character_Name_Ptr != 0)
       remember to change "Character_Name" to match your new character.
-      Make sure your Character_Name PID is declared in CRITRPID.H.
+      Make sure your PID_Character_Name is declared in CRITRPID.H.
       If you used Proto Manager to create your critter then it should have
       automatically added it to this list.
 
