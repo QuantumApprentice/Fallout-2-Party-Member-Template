@@ -1,0 +1,428 @@
+/*******************************************************************************
+        Name:
+        Location:
+        Description: NPC template script
+
+            Created: by sFall Script Editor
+            Updated:
+
+*******************************************************************************/
+
+/* Include Files */
+#include "..\headers\define.h"
+#include "..\headers\command.h"
+#include "..\headers\ModReact.h"
+
+// Character_Name
+/* Highlight "Character_Name" above and press CTRL+F to activate the Find function.
+   Type your new character's name in the replace box, check "Find all matches",
+   and "Find in current scripts", then Find & Replace all. */
+
+
+/* Don't forget to change the Name and Town_Rep_Var variables to match your new critter */
+#define NAME                    SCRIPT_Character_Name
+#define TOWN_REP_VAR            GVAR_TOWN_REP_               // Need to specify global variable for town rep modifiers if used (replace "GVAR_TOWN_REP_" with actual global variable name)
+
+
+
+/* Standard Script Procedures */
+procedure start;
+procedure critter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure use_skill_on_p_proc;
+procedure damage_p_proc;
+procedure map_enter_p_proc;
+procedure push_p_proc;
+
+/* Script Specific Procedure Calls */
+procedure Node998;                                      // This Node is Always Combat
+procedure Node999;                                      // This Node is Always Ending
+
+// The next lines are added in by the Designer Tool.
+procedure Node000;
+procedure Node001;
+procedure Node002;
+procedure Join_Party;                                    // Party Join node
+
+/*****************************************************************
+Party Member pre-requisites
+These lines are necessary for the critter to join the player
+as a party member.
+*****************************************************************/
+procedure Node1000;                                      // Main party member node
+procedure Node1001;                                      // heal yourself
+procedure Node1002;                                      // wait here
+procedure Node1003;                                      // put your weapon away
+procedure Node1004;                                      // follow close
+procedure Node1005;                                      // follow medium
+procedure Node1006;                                      // follow far
+procedure Node1007;                                      // change distance menu
+procedure Node1008;                                      // look at gear menu
+procedure Node1009;                                      // remove armor menu
+procedure Node1010;                                      // weapon abilities
+procedure Node1100;                                      // rejoin party
+
+#define Joined_Player (0)
+/* Change "Character_Name" to match the name of your new critter */
+#define Character_Name_joins_party             party_add_self;                                                   \
+                                               critter_add_trait(self_obj,TRAIT_OBJECT,OBJECT_TEAM_NUM,TEAM_PLAYER)
+#define dude_has_free_slot_for_Character_Name  ((dude_at_max_party_size == false) and (Character_Name_In_Party == false))     // Need to declare Character_Name_In_Party in PARTY.H
+      /*
+      Right click "dude_at_max_party_size" and select "Go to declaration" to open PARTY.H
+      Scroll to the top and add lines with this format:
+         #define Character_Name_Ptr                             party_member_obj(PID_Character_Name)
+      and:
+         #define Character_Name_In_Party                        (Character_Name_Ptr != 0)
+      remember to change "Character_Name" to match your new character.
+      Make sure your Character_Name PID is declared in CRITRPID.H.
+      If you used Proto Manager to create your critter then it should have
+      automatically added it to this list.
+
+      In order to get Party AI options for combat, open Party.TXT in data\data\ folder
+      and add your new party member to the end of the list.
+      Make sure the party_member_PID is pointing to the correct number and is declared in CRITRPID.H
+      */
+#define LVAR_Flags                      (4)
+#define LVAR_WAITING                    (7)
+#define LVAR_FOLLOW_DISTANCE            (8)
+#define LVAR_TEAM                       (9)
+#define LVAR_Joined_Party_Before        (14)
+
+#define PARTY_NODE_X                      Node1000
+
+
+/*****************************************************************
+   Local Variables which are saved.
+   All Local Variables need to be prepended by LVAR_
+*****************************************************************/
+#define LVAR_Herebefore                 (4)
+#define LVAR_Hostile                    (5)
+#define LVAR_Personal_Enemy             (6)
+#define LVAR_Caught_Thief               (7)
+
+/*******************************************************************
+   Imported variables from the Map scripts. These should only be
+   pointers and variables that need not be saved. If a variable
+   Needs to be saved, make it a map variable (MVAR_)
+*******************************************************************/
+
+
+/*******************************************************************
+   Local variables which do not need to be saved between map changes.
+*******************************************************************/
+variable begin
+end
+
+/*******************************************************************
+*                           PROCEDURES                             *
+*******************************************************************/
+procedure start begin
+
+end
+
+procedure map_enter_p_proc begin
+   /*  This procedure will get called each time that the map is first entered. It will
+       set up the Team number and AI packet for this critter. This will override the
+       default from the prototype, and needs to be set in scripts. */
+
+   party_member_map_enter;
+   if (Character_Name_In_Party) then begin
+      //do nothing
+   end
+
+//   critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM,TEAM_);
+//   critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET,AI_);
+
+end
+
+procedure critter_p_proc begin
+   /* Every heartbeat that the critter gets, this procedure will be called. Anything from
+      Movement to attacking the player on sight can be placed in here.
+      If the critter is mad at the player for any reason, it will attack and remember to attack
+      the player should the game be saved and loaded repeatedly. Additionally, if any special
+      actions need to be taken by the critter based on previous combat, the critter will remember
+      this as well. */
+
+   if ((local_var(LVAR_Hostile) > 1) and (obj_can_see_obj(self_obj, dude_obj))) then begin
+      set_local_var(LVAR_Hostile,1);
+      self_attack_dude; //Macro made by Tom to keep the critter fleeing.
+   end
+
+   /* This next script moves the new party member to follow the player after they've joined and
+      when entering new maps. */
+   if (Character_Name_In_Party) then begin
+      if (party_is_waiting == false) then begin
+         party_member_follow_dude
+      end
+   end
+
+end
+
+procedure damage_p_proc begin
+   /* Whenever the critter takes damage of any type, this procedure will be called. Things
+      like setting ENEMY_ and LVAR_Personal_Enemy can be set here.
+      If the player causes damage to this critter, then he will instantly consider the player
+      his personal enemy. In Critter_Proc or through dialog, actions will be taken against
+      the player for his evil acts. */
+
+   if (obj_in_party(source_obj)) then begin
+       set_local_var(LVAR_Personal_Enemy, 1);
+   end
+
+end
+
+procedure pickup_p_proc begin
+   /* Any time that the player is caught stealing from this critter, Pickup_proc will be called.
+      In here, various things can happen. The most common response is instant hostility which
+      will be remembered. */
+
+   if (source_obj == dude_obj) then begin
+       set_local_var(LVAR_Hostile, 2);
+   end
+
+end
+
+procedure talk_p_proc begin
+   /* These next two scripts are for recruiting a new character to your party,
+      Node1000 in particular is necessary to connect to the generic party member inventory
+      and combat settings.
+      Open Party.h and create a new pointer for your new party member critter at the top of the #defines.
+      Replace "Character_Name_Ptr" with the pointer for your new character created in Party.h */
+
+   /* The dialog system is setup and prepares the player to talk to this NPC. Where To Go
+      written by designers are placed in here. Additionally, Reactions are generated and
+      stored which affects player interactions. */
+   Evil_Critter:=0;
+   Slavery_Tolerant:=SLAVE_TOLERANT;
+   Karma_Perception:=KARMA_PERCEPTION1;
+
+   CheckKarma;
+
+   GetReaction;
+
+start_dialogue(self_obj, neutral_fidget);
+gsay_start;
+   if ((Character_Name_Ptr != 0) or (party_is_waiting)) then begin      //Character_Name_Ptr needs to be declared in Party.h with your own "Character_Name"
+      call Node1000;
+      end
+   else begin
+      call Node001;
+   end
+gsay_end;
+end_dialogue;
+
+end
+
+procedure destroy_p_proc begin
+   /* This procedure gets called only on the death of this NPC. Special things like
+       incrementing the death count for reputation purposes and Enemy Counters are placed
+       in here. */
+
+   /* Increment the aligned critter counter
+        This counter affects your karma? */
+   //inc_good_critter
+   //inc_evil_critter
+   inc_neutral_critter
+
+   /* Set global_variable for Enemy status*/
+
+end
+
+procedure look_at_p_proc begin
+   /* Look_at_p_proc gets called any time that the player passes the cursor over any object.
+       This should only hold the most cursory of glances for the player. */
+
+   script_overrides;
+   if (local_var(LVAR_Herebefore) == 0) then
+      display_mstr(100);
+   else
+      display_mstr(101);
+
+end
+
+procedure description_p_proc begin
+   /* The player will see more indepth descriptions from this procedure. They are actively
+   looking at the critter and want more information. Things like names can be added here
+   if the critter is known to the player. */
+
+   script_overrides;
+   display_mstr(102);
+
+end
+
+procedure use_skill_on_p_proc begin
+   /* Any time a skill is used on a critter this call is made. This can be to give examinations
+       for things like Doctor skill or messages for various other skills. */
+end
+
+procedure push_p_proc begin
+
+   floater_rand(780, 790);
+
+end
+
+procedure Node001 begin
+
+   Reply(random(750,755) != 751);                         // Random dialogue greetings
+   if (Character_Name_In_Party == false) then begin
+      NLowOption(760, Node002);                    // This NLowOption message(760) is a Low Int request to join the player's party
+      NOption(765, Node002, 4);                    // This NOption message(765) is Normal Int request to join the player's party
+   end else begin
+      call Node1000;
+   end
+
+end
+
+procedure Node002 begin
+   /* This node checks for stuff before allowing NPC to join party.
+       You can add other conditions for joining here. */
+   if (dude_charisma <= 1) then begin
+     NMessage(800);                                // This NOption message(800) is a response if player has 1 Charisma or less (can't have party members because too ugly)
+end else begin
+   if (dude_at_max_party_size) then begin
+   Reply(810);                                     // This line is for when the character does NOT join the player's party       (because too many followers)
+      NOption(820,Node999,4);                      // This NOption message is Normal Int player response to NOT joining party    (because too many followers)
+      NLowOption(825,Node999);                     // This NLowOption message is Low Int player response to NOT joining party    (because too many followers)
+
+   end else if town_rep_is_hated then begin
+   Reply(830);                                     // This line is for if the player is hated by the NPC's home town (hates player because TOWN_REPUTATION<=-15)
+      NOption(835, Node998, 4);                    // This line is Normal Int response to being hated by the NPC's home town  (default points to combat Node998)
+      NLowOption(840, Node998);                    // This line is Low Int response to being hated by town                    (default points to Combat Node998)
+
+   end else begin
+   Reply(850);                                     // This line is for when the character agrees to Join the player's party
+      NOption(855, Join_Party, 4);                 // This NOption message(855) is Normal Int player response to joining party
+      NLowOption(860, Join_Party);                 // This NLowOption message(860) is Low Int player response to joining party
+   end
+end
+
+end
+
+
+procedure Node998 begin
+   /* Should the Player ever cause the NPC too much discomfort that he desires to attack the player,
+       this call will be made. Essentially, it stores the Hostile vaule so that the critter remembers
+       he was once hostile towards the player.*/
+
+   set_hostile;
+
+end
+
+
+procedure Node999 begin
+   /* Anytime that there is a need for an ending to dialog, this node is to be called. It will just
+       exit from the dialog system without any reprisals from the NPC. */
+end
+
+
+procedure Join_Party begin
+   /* This node places the NPC in the player's party.
+      Call this node any time you want an action from the player to result in the NPC joining their party. */
+
+   Character_Name_joins_party;
+   set_local_var(Joined_Player,1);
+   float_msg(self_obj, message_str(NAME, 870), FLOAT_COLOR_HIGH);      // Personalize this message or remove if you feel like it
+
+end
+
+
+   /* Node1000 and on are default dialogue nodes for a generic NPC joining the player's party. */
+
+procedure Node1000 begin
+   Reply(880);                                  // This reply is when the NPC is in your party and you talk to them
+   party_member_default_options;
+end
+procedure Node1001 begin
+   // heal yourself
+   obj_heal(self_obj)
+   if (party_healed_max) then begin
+      Reply(random(900,905));                   // This reply is when your party member is healed to max
+   end else if (party_healed_good) then begin
+     Reply(910);                                // This reply message is for when the NPC is Barely Hurt (90% health or above)
+   end else if (party_healed_hurt) then begin
+      Reply(915);                               // This reply message is for when the NPC is Wounded (70%-90% health?)
+   end else begin
+      Reply(920);                               // This reply message is for Failures
+   end
+   party_member_default_options;
+end
+procedure Node1002 begin
+   // wait here
+   set_party_waiting;
+   Reply(random(930,935));                      // These reply messages are in response to wait request
+   party_member_default_options;
+end
+procedure Node1003 begin
+   // put your weapon away
+   inven_unwield(self_obj);
+   Reply(940);                                  // Response to removing weapon
+   party_member_default_options;
+end
+procedure Node1004 begin
+   // follow close
+   set_follow_close;
+   Reply(random(950,955));                      // Random responses for distance change
+   party_member_default_options;
+end
+procedure Node1005 begin
+   // follow medium
+   set_follow_medium;
+   Reply(random(960,965));                      // Random responses for distance change
+   party_member_default_options;
+end
+procedure Node1006 begin
+   // follow far
+   set_follow_far;
+   Reply(random(970,975));                      // Random responses for distance change
+   party_member_default_options;
+end
+procedure Node1007 begin
+   // distance
+   //Reply("TEMP MESSAGE: DISTANCE");
+   Reply(980);                                  // Generic response to "Change follow distance" menu
+   party_member_def_follow_options;
+end
+procedure Node1008 begin
+   // gear
+   //Reply("TEMP MESSAGE: GEAR");
+   Reply(985);                                  // Generic response to "Look at your gear"
+   party_member_def_gear_options;
+end
+procedure Node1009 begin
+   // remove armor
+   //NEED TO FIND OUT WHY THIS DOESNT WORK!!! - NBK
+   remove_armor(self_obj)
+   //Reply("TEMP MESSAGE: REMOVE ARMOR");
+   Reply(990);                                  // Generic response to "Remove armor"
+   party_member_default_options;
+end
+procedure Node1010 begin
+   // weapons that can be used
+   //Reply("TEMP MESSAGE: CAN USE...");
+   Reply(995);                                  // Specific reply, indicating what weapons the NPC can use.
+   party_member_default_options;
+end
+procedure Node1100 begin                        // This node is for when the player is asking the NPC to re-join
+   // join me
+   if (dude_charisma <= 1) then begin
+      set_self_abandon_party;
+      Reply(800);                               // NPC abandons party because Player Character is too ugly
+      NOption(g_mstr(10007),Node999,001);       // Predefined generic messages in GENERIC.MSG
+   end else if (dude_at_max_party_size) then begin
+      set_self_abandon_party;
+      Reply(810); //was 2000                    // Generic "Too many followers" reply
+      NOption(g_mstr(10007),Node999,001);       // Predefined generic messages in GENERIC.MSG
+   end else if (town_rep_is_hated) then begin
+      set_self_abandon_party;
+      Reply(830);                               // Will abandon party if Town_Rep becomes Hated
+      NOption(g_mstr(10007),Node999,001);       // Predefined generic messages in GENERIC.MSG
+   end else begin
+      end_party_waiting;
+      Reply(random(750,755));                  // Random dialogue greetings
+      party_member_default_options;
+   end
+end
