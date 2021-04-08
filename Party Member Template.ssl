@@ -1,5 +1,5 @@
 /*******************************************************************************
-        Name:        Party Member Template
+        Name:        Fallout 2 Party Member Template
         Location:
         Description: NPC template script
 
@@ -16,7 +16,7 @@
 // Character_Name
 /* Highlight "Character_Name" above and press CTRL+F to activate the Find function.
    Type your new character's name in the replace box, check "Find all matches",
-   and "Find in current scripts", then Find & Replace all. */
+   check "Find in current scripts", then "Find & Replace". */
 
 
 /* Don't forget to change the Name and Town_Rep_Var variables to match your new critter */
@@ -77,8 +77,8 @@ procedure Node1100;                                      // rejoin party
          #define Character_Name_Ptr                             party_member_obj(PID_Character_Name)
       and:
          #define Character_Name_In_Party                        (Character_Name_Ptr != 0)
-      remember to change "Character_Name" to match your new character.
-      Make sure your PID_Character_Name is declared in CRITRPID.H.
+      You don't have to organize them in the same sections as their counterparts, but it helps :)
+      Make sure PID_Character_Name is declared in CRITRPID.H.
       If you used Proto Manager to create your critter then it should have
       automatically added it to this list.
 
@@ -86,6 +86,7 @@ procedure Node1100;                                      // rejoin party
       and add your new party member to the end of the list.
       Make sure the party_member_PID is pointing to the correct number and is declared in CRITRPID.H
       */
+
 #define LVAR_Flags                      (4)
 #define LVAR_WAITING                    (7)
 #define LVAR_FOLLOW_DISTANCE            (8)
@@ -269,8 +270,8 @@ procedure Node001 begin
 
    Reply(random(750,755) != 751);                         // Random dialogue greetings
    if (Character_Name_In_Party == false) then begin
-      NLowOption(760, Node002);                    // This NLowOption message(760) is a Low Int request to join the player's party
-      NOption(765, Node002, 4);                    // This NOption message(765) is Normal Int request to join the player's party
+      NLowOption(760, Node002);                          // This NLowOption message(760) is a Low Int request to join the player's party
+      NOption(765, Node002, 4);                          // This NOption message(765) is Normal Int request to join the player's party
    end else begin
       call Node1000;
    end
@@ -281,22 +282,22 @@ procedure Node002 begin
    /* This node checks for stuff before allowing NPC to join party.
        You can add other conditions for joining here. */
    if (dude_charisma <= 1) then begin
-     NMessage(800);                                // This NOption message(800) is a response if player has 1 Charisma or less (can't have party members because too ugly)
+     NMessage(800);                                      // This NOption message(800) is a response if player has 1 Charisma or less (can't have party members because too ugly)
 end else begin
    if (dude_at_max_party_size) then begin
-   Reply(810);                                     // This line is for when the character does NOT join the player's party       (because too many followers)
-      NOption(820,Node999,4);                      // This NOption message is Normal Int player response to NOT joining party    (because too many followers)
-      NLowOption(825,Node999);                     // This NLowOption message is Low Int player response to NOT joining party    (because too many followers)
+   Reply(810);                                           // This line is for when the character does NOT join the player's party       (because too many followers)
+      NOption(820,Node999,4);                            // This NOption message is Normal Int player response to NOT joining party    (because too many followers)
+      NLowOption(825,Node999);                           // This NLowOption message is Low Int player response to NOT joining party    (because too many followers)
 
    end else if town_rep_is_hated then begin
-   Reply(830);                                     // This line is for if the player is hated by the NPC's home town (hates player because TOWN_REPUTATION<=-15)
-      NOption(835, Node998, 4);                    // This line is Normal Int response to being hated by the NPC's home town  (default points to combat Node998)
-      NLowOption(840, Node998);                    // This line is Low Int response to being hated by town                    (default points to Combat Node998)
+   Reply(830);                                           // This line is for if the player is hated by the NPC's home town (hates player because TOWN_REPUTATION<=-15)
+      NOption(835, Node998, 4);                          // This line is Normal Int response to being hated by the NPC's home town  (default points to combat Node998)
+      NLowOption(840, Node998);                          // This line is Low Int response to being hated by town                    (default points to Combat Node998)
 
    end else begin
-   Reply(850);                                     // This line is for when the character agrees to Join the player's party
-      NOption(855, Join_Party, 4);                 // This NOption message(855) is Normal Int player response to joining party
-      NLowOption(860, Join_Party);                 // This NLowOption message(860) is Low Int player response to joining party
+   Reply(850);                                           // This line is for when the character agrees to Join the player's party
+      NOption(855, Join_Party, 4);                       // This NOption message(855) is Normal Int player response to joining party
+      NLowOption(860, Join_Party);                       // This NLowOption message(860) is Low Int player response to joining party
    end
 end
 
@@ -333,63 +334,63 @@ end
    /* Node1000 and on are default dialogue nodes for a generic NPC joining the player's party. */
 
 procedure Node1000 begin
-   Reply(880);                                  // This reply is when the NPC is in your party and you talk to them
+   Reply(880);                                        // This reply is when the NPC is in your party and you talk to them
    party_member_default_options;
 end
 procedure Node1001 begin
    // heal yourself
    obj_heal(self_obj)
    if (party_healed_max) then begin
-      Reply(random(900,905));                   // This reply is when your party member is healed to max
+      Reply(random(900,905));                         // This reply is when your party member is healed to max
    end else if (party_healed_good) then begin
-     Reply(910);                                // This reply message is for when the NPC is Barely Hurt (90% health or above)
+     Reply(910);                                      // This reply message is for when the NPC is Barely Hurt (90% health or above)
    end else if (party_healed_hurt) then begin
-      Reply(915);                               // This reply message is for when the NPC is Wounded (70%-90% health?)
+      Reply(915);                                     // This reply message is for when the NPC is Wounded (70%-90% health?)
    end else begin
-      Reply(920);                               // This reply message is for Failures
+      Reply(920);                                     // This reply message is for Failures
    end
    party_member_default_options;
 end
 procedure Node1002 begin
    // wait here
    set_party_waiting;
-   Reply(random(930,935));                      // These reply messages are in response to wait request
+   Reply(random(930,935));                            // These reply messages are in response to wait request
    party_member_default_options;
 end
 procedure Node1003 begin
    // put your weapon away
    inven_unwield(self_obj);
-   Reply(940);                                  // Response to removing weapon
+   Reply(940);                                        // Response to removing weapon
    party_member_default_options;
 end
 procedure Node1004 begin
    // follow close
    set_follow_close;
-   Reply(random(950,955));                      // Random responses for distance change
+   Reply(random(950,955));                            // Random responses for distance change
    party_member_default_options;
 end
 procedure Node1005 begin
    // follow medium
    set_follow_medium;
-   Reply(random(960,965));                      // Random responses for distance change
+   Reply(random(960,965));                            // Random responses for distance change
    party_member_default_options;
 end
 procedure Node1006 begin
    // follow far
    set_follow_far;
-   Reply(random(970,975));                      // Random responses for distance change
+   Reply(random(970,975));                            // Random responses for distance change
    party_member_default_options;
 end
 procedure Node1007 begin
    // distance
    //Reply("TEMP MESSAGE: DISTANCE");
-   Reply(980);                                  // Generic response to "Change follow distance" menu
+   Reply(980);                                        // Generic response to "Change follow distance" menu
    party_member_def_follow_options;
 end
 procedure Node1008 begin
    // gear
    //Reply("TEMP MESSAGE: GEAR");
-   Reply(985);                                  // Generic response to "Look at your gear"
+   Reply(985);                                        // Generic response to "Look at your gear"
    party_member_def_gear_options;
 end
 procedure Node1009 begin
@@ -397,32 +398,32 @@ procedure Node1009 begin
    //NEED TO FIND OUT WHY THIS DOESNT WORK!!! - NBK
    remove_armor(self_obj)
    //Reply("TEMP MESSAGE: REMOVE ARMOR");
-   Reply(990);                                  // Generic response to "Remove armor"
+   Reply(990);                                        // Generic response to "Remove armor"
    party_member_default_options;
 end
 procedure Node1010 begin
    // weapons that can be used
    //Reply("TEMP MESSAGE: CAN USE...");
-   Reply(995);                                  // Specific reply, indicating what weapons the NPC can use.
+   Reply(995);                                        // Specific reply, indicating what weapons the NPC can use.
    party_member_default_options;
 end
-procedure Node1100 begin                        // This node is for when the player is asking the NPC to re-join
+procedure Node1100 begin                              // This node is for when the player is asking the NPC to re-join
    // join me
    if (dude_charisma <= 1) then begin
       set_self_abandon_party;
-      Reply(800);                               // NPC abandons party because Player Character is too ugly
-      NOption(g_mstr(10007),Node999,001);       // Predefined generic messages in GENERIC.MSG
+      Reply(800);                                     // NPC abandons party because Player Character is too ugly
+      NOption(g_mstr(10007),Node999,001);             // Predefined generic messages in GENERIC.MSG
    end else if (dude_at_max_party_size) then begin
       set_self_abandon_party;
-      Reply(810); //was 2000                    // Generic "Too many followers" reply
-      NOption(g_mstr(10007),Node999,001);       // Predefined generic messages in GENERIC.MSG
+      Reply(810); //was 2000                          // Generic "Too many followers" reply
+      NOption(g_mstr(10007),Node999,001);             // Predefined generic messages in GENERIC.MSG
    end else if (town_rep_is_hated) then begin
       set_self_abandon_party;
-      Reply(830);                               // Will abandon party if Town_Rep becomes Hated
-      NOption(g_mstr(10007),Node999,001);       // Predefined generic messages in GENERIC.MSG
+      Reply(830);                                     // Will abandon party if Town_Rep becomes Hated
+      NOption(g_mstr(10007),Node999,001);             // Predefined generic messages in GENERIC.MSG
    end else begin
       end_party_waiting;
-      Reply(random(750,755));                  // Random dialogue greetings
+      Reply(random(750,755));                         // Random dialogue greetings
       party_member_default_options;
    end
 end
