@@ -84,6 +84,7 @@ procedure Node1100;                                      // rejoin party
 
       In order to get Party AI options for combat, open Party.TXT in data\data\ folder
       and add your new party member to the end of the list.
+      Simply copy and paste the options for the previous party member, and adjust to your liking.
       Make sure the party_member_PID is pointing to the correct number and is declared in CRITRPID.H
       */
 
