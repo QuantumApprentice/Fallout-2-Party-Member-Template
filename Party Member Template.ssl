@@ -43,17 +43,15 @@ procedure push_p_proc;
 procedure Node998;                                      // This Node is Always Combat
 procedure Node999;                                      // This Node is Always Ending
 
-// The next lines are added in by the Designer Tool.
-procedure Node000;
-procedure Node001;
-procedure Node002;
-procedure Join_Party;                                    // Party Join node
-
 /*****************************************************************
 Party Member pre-requisites
 These lines are necessary for the critter to join the player
 as a party member.
 *****************************************************************/
+procedure Node000;
+procedure Node001;
+procedure Node002;
+procedure Join_Party;                                    // Party Join node
 procedure Node1000;                                      // Main party member node
 procedure Node1001;                                      // heal yourself
 procedure Node1002;                                      // wait here
