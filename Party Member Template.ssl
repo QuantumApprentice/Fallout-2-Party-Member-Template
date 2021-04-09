@@ -16,7 +16,8 @@
 // Character_Name
 /* Highlight "Character_Name" above and press CTRL+F to activate the Find function.
    Type your new character's name in the replace box, check "Find all matches",
-   check "Find in current scripts", then "Find & Replace". */
+   check "Find in current scripts", fill your character name in the Replace Text box,
+   then select "Find & Replace". */
 
 
 /* Don't forget to change the Name and Town_Rep_Var variables to match your new critter */
@@ -88,23 +89,21 @@ procedure Node1100;                                      // rejoin party
       Make sure the party_member_PID is pointing to the correct number and is declared in CRITRPID.H
       */
 
-#define LVAR_Flags                      (4)
-#define LVAR_WAITING                    (7)
-#define LVAR_FOLLOW_DISTANCE            (8)
-#define LVAR_TEAM                       (9)
-#define LVAR_Joined_Party_Before        (14)
-
-#define PARTY_NODE_X                      Node1000
-
-
 /*****************************************************************
    Local Variables which are saved.
    All Local Variables need to be prepended by LVAR_
 *****************************************************************/
-#define LVAR_Herebefore                 (4)
-#define LVAR_Hostile                    (5)
+//#define LVAR_Hostile                    (4)
+#define LVAR_Flags                      (4)
+#define LVAR_Herebefore                 (5)
 #define LVAR_Personal_Enemy             (6)
 #define LVAR_Caught_Thief               (7)
+#define LVAR_WAITING                    (8)
+#define LVAR_FOLLOW_DISTANCE            (9)
+#define LVAR_TEAM                       (10)
+#define LVAR_Joined_Party_Before        (11)
+
+#define PARTY_NODE_X                      Node1000
 
 /*******************************************************************
    Imported variables from the Map scripts. These should only be
@@ -149,8 +148,9 @@ procedure critter_p_proc begin
       actions need to be taken by the critter based on previous combat, the critter will remember
       this as well. */
 
-   if ((local_var(LVAR_Hostile) > 1) and (obj_can_see_obj(self_obj, dude_obj))) then begin
-      set_local_var(LVAR_Hostile,1);
+//   if ((local_var(LVAR_Hostile) > 1) and (obj_can_see_obj(self_obj, dude_obj))) then begin
+//      set_local_var(LVAR_Hostile,1);
+   if (hostile) and (self_can_see_dude) then begin
       self_attack_dude; //Macro made by Tom to keep the critter fleeing.
    end
 
@@ -309,7 +309,7 @@ procedure Node998 begin
    /* Should the Player ever cause the NPC too much discomfort that he desires to attack the player,
        this call will be made. Essentially, it stores the Hostile vaule so that the critter remembers
        he was once hostile towards the player.*/
-
+//   set_local_var(LVAR_Hostile,2);
    set_hostile;
 
 end
