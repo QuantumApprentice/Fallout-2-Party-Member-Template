@@ -90,6 +90,9 @@ procedure Node1100;                                      // rejoin party
 /*****************************************************************
    Local Variables which are saved.
    All Local Variables need to be prepended by LVAR_
+      To have LVars work, open scripts.LST, scroll to your character's script name,
+      and change the "LVars" setting to at least 11,
+      Since there are 11 Local Variables used below.
 *****************************************************************/
 //#define LVAR_Hostile                    (4)
 #define LVAR_Flags                      (4)
@@ -170,7 +173,8 @@ procedure damage_p_proc begin
       the player for his evil acts. */
 
    if (obj_in_party(source_obj)) then begin
-       set_local_var(LVAR_Personal_Enemy, 1);
+//       set_local_var(LVAR_Personal_Enemy, 1);
+      set_personal_enemy;
    end
 
 end
@@ -181,7 +185,8 @@ procedure pickup_p_proc begin
       will be remembered. */
 
    if (source_obj == dude_obj) then begin
-       set_local_var(LVAR_Hostile, 2);
+//      set_local_var(LVAR_Hostile, 2);
+      set_hostile;
    end
 
 end
