@@ -20,9 +20,9 @@
    then select "Find & Replace". */
 
 
-/* Don't forget to change the Name and Town_Rep_Var variables to match your new critter */
+/* Don't forget to change the NAME and TOWN_REP_VAR variables to match your new critter */
 #define NAME                    SCRIPT_Character_Name
-#define TOWN_REP_VAR            GVAR_TOWN_REP_               // Need to specify global variable for town rep modifiers if used (replace "GVAR_TOWN_REP_" with actual global variable name)
+#define TOWN_REP_VAR            GVAR_TOWN_REP_ARROYO              // Need to specify global.h variable for town rep modifiers if used (replace "GVAR_TOWN_REP_" with actual global variable name)
 
 
 
@@ -44,14 +44,19 @@ procedure Node998;                                      // This Node is Always C
 procedure Node999;                                      // This Node is Always Ending
 
 /*****************************************************************
+Node001 is a dialogue node that includes a line asking to join the party.
+Node002 has several game checks before joining with fail/pass responses.
+*****************************************************************/
+procedure Node001;
+procedure Node002;
+
+/*****************************************************************
 Party Member pre-requisites
 These lines are necessary for the critter to join the player
 as a party member.
 *****************************************************************/
-procedure Node000;
-procedure Node001;
-procedure Node002;
 procedure Join_Party;                                    // Party Join node
+procedure Abandon_Party;                                 // Party Abandon node
 procedure Node1000;                                      // Main party member node
 procedure Node1001;                                      // heal yourself
 procedure Node1002;                                      // wait here
@@ -65,7 +70,7 @@ procedure Node1009;                                      // remove armor menu
 procedure Node1010;                                      // weapon abilities
 procedure Node1100;                                      // rejoin party
 
-#define Joined_Player (0)
+
 /* Change "Character_Name" to match the name of your new critter */
 #define Character_Name_joins_party             party_add_self;                                                   \
                                                critter_add_trait(self_obj,TRAIT_OBJECT,OBJECT_TEAM_NUM,TEAM_PLAYER)
@@ -90,19 +95,28 @@ procedure Node1100;                                      // rejoin party
 /*****************************************************************
    Local Variables which are saved.
    All Local Variables need to be prepended by LVAR_
+
       To have LVars work, open scripts.LST, scroll to your character's script name,
-      and change the "LVars" setting to at least 11,
-      Since there are 11 Local Variables used below.
+      and change the "LVars" setting to at least 8,
+      Since there are 8 Local Variables used below.
+
+      (LVAR_ 0 thru 3 are reserved for NPC Reaction Modifiers...
+      ...will add more instructions when I learn how they work.)
 *****************************************************************/
-//#define LVAR_Hostile                    (4)
 #define LVAR_Flags                      (4)
-#define LVAR_Herebefore                 (5)
-#define LVAR_Personal_Enemy             (6)
-#define LVAR_Caught_Thief               (7)
-#define LVAR_WAITING                    (8)
-#define LVAR_FOLLOW_DISTANCE            (9)
-#define LVAR_TEAM                       (10)
-#define LVAR_Joined_Party_Before        (11)
+#define LVAR_WAITING                    (5)
+#define LVAR_FOLLOW_DISTANCE            (6)
+#define LVAR_TEAM                       (7)
+#define LVAR_Joined_Player              (8)
+
+/*****************************************************************
+      If you would rather use the LVAR_Hostile, LVAR_Herebefore, LVAR_Personal_Enemy
+      variables instead of LVAR_Flags, uncomment the relevent lines and comment out
+      lines with set_herebefore, set_hostile, if (hostile) and (self_can_see_dude).
+*****************************************************************/
+//#define LVAR_Hostile                    (9)
+//#define LVAR_Herebefore                 (10)
+//#define LVAR_Personal_Enemy             (11)
 
 #define PARTY_NODE_X                      Node1000
 
@@ -162,6 +176,27 @@ procedure critter_p_proc begin
          party_member_follow_dude
       end
    end
+
+   /*
+   -----   These are examples of common Abandon_Party calls, use...or don't...at your discretion   -----
+
+   else if (Character_Name_In_Party) then begin
+      if (global_var(GVAR_PLAYER_REPUTATION) < Character_Name_Bad_Karma) then begin
+         call Abandon_Party;
+         debug_msg("Character_Name Bad Player Rep");
+      end
+      else if (has_rep_childkiller) then begin
+         call Abandon_Party;
+         debug_msg("Character_Name: Child Killer");
+      end
+      else if (has_rep_berserker) then begin
+         call Abandon_Party;
+         debug_msg("Character_Name: Berserker");
+      end
+      else if (has_rep_slaver) then begin
+         call Abandon_Party;
+         debug_msg("Character_Name: Slaver Rep");
+      end*/
 
 end
 
@@ -242,9 +277,12 @@ procedure look_at_p_proc begin
        This should only hold the most cursory of glances for the player. */
 
    script_overrides;
-   if (local_var(LVAR_Herebefore) == 0) then
+//   if (local_var(LVAR_Herebefore) == 0) then
+//      set_local_var(LVAR_Herebefore, 1);
+   if not herebefore then begin
+      set_herebefore;
       display_mstr(100);
-   else
+   end else
       display_mstr(101);
 
 end
@@ -266,13 +304,13 @@ end
 
 procedure push_p_proc begin
 
-   floater_rand(780, 790);
+   floater_rand(780, 790);                               // Random Float responses for being pushed by player
 
 end
 
 procedure Node001 begin
 
-   Reply(random(750,755) != 751);                         // Random dialogue greetings
+   Reply(random(750,751));                               // Random dialogue greetings
    if (Character_Name_In_Party == false) then begin
       NLowOption(760, Node002);                          // This NLowOption message(760) is a Low Int request to join the player's party
       NOption(765, Node002, 4);                          // This NOption message(765) is Normal Int request to join the player's party
@@ -329,8 +367,18 @@ procedure Join_Party begin
       Call this node any time you want an action from the player to result in the NPC joining their party. */
 
    Character_Name_joins_party;
-   set_local_var(Joined_Player,1);
+   set_local_var(LVAR_Joined_Player,1);
    float_msg(self_obj, message_str(NAME, 870), FLOAT_COLOR_HIGH);      // Personalize this message or remove if you feel like it
+
+end
+
+procedure Abandon_Party begin
+
+   //set_local_var(LVAR_never_again,1);
+   //party_remove(self_obj);
+   //leave party
+   if (self_visible) then
+   set_self_abandon_party;
 
 end
 
@@ -358,7 +406,7 @@ end
 procedure Node1002 begin
    // wait here
    set_party_waiting;
-   Reply(random(930,935));                            // These reply messages are in response to wait request
+   Reply(random(930,931));                            // These reply messages are in response to wait request
    party_member_default_options;
 end
 procedure Node1003 begin
@@ -370,13 +418,13 @@ end
 procedure Node1004 begin
    // follow close
    set_follow_close;
-   Reply(random(950,955));                            // Random responses for distance change
+   Reply(random(950,951));                            // Random responses for distance change
    party_member_default_options;
 end
 procedure Node1005 begin
    // follow medium
    set_follow_medium;
-   Reply(random(960,965));                            // Random responses for distance change
+   Reply(random(960,961));                            // Random responses for distance change
    party_member_default_options;
 end
 procedure Node1006 begin
@@ -427,7 +475,7 @@ procedure Node1100 begin                              // This node is for when t
       NOption(g_mstr(10007),Node999,001);             // Predefined generic messages in GENERIC.MSG
    end else begin
       end_party_waiting;
-      Reply(random(750,755));                         // Random dialogue greetings
+      Reply(random(750,751));                         // Random dialogue greetings
       party_member_default_options;
    end
 end
